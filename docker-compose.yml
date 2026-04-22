@@ -1,0 +1,111 @@
+#stack name
+name: dibotagent
+
+services:
+  # ========== DIBOTAGENT  ==========
+  dibotagent:
+    image: arkhispania/dibotagent:latest
+    container_name: dibotagent
+    ports:
+      - "8081:8081"
+    environment:
+      #General Configuration	  
+      - StoragePath=./App_Data
+      - certName=arktools-https.pfx
+      - certPassword=arktools2024
+      - historic_days_querys=60      	  
+      # Ollama Configuration
+      - ollama_url=http://ollama:11434/api/generate
+      - ollama_model=phi3.5
+      - ollama_embedding_url=http://ollama:11434/api/embeddings
+      - ollama_embedding_model=nomic-embed-text
+      - ollama_temperature=0.3
+      - ollama_top_p=0.7
+      - ollama_repeat_penalty=1.2
+      - ollama_num_predict=512
+      - embedings_token_words_size=1024
+      - ollama_http_timeout_seconds=120
+      # ChromaDB Configuration
+      - chromadb_host=chromadb:8000
+      # Fragment & General Settings
+      - top_k_fragments=5
+      - max_fragments_distance=0.7
+      - chromadb_apikey=
+      - http_timeout_seconds=120 	  
+      # DeepSeek Configuration
+      - usar_deepseek=true
+      - deepseek_api_key=your custom api.
+      - deepseek_model=deepseek-chat
+      - deepseek_temperature=1.3
+      - deepseek_max_tokens=512      
+      - deepseek_http_timeout_seconds=120
+      # ASP.NET Core
+      - ASPNETCORE_ENVIRONMENT=Production      
+      - AllowedHosts=*	
+    volumes:
+      - dibot_vol:/app/App_Data
+    depends_on:    
+      ollama:
+        condition: service_healthy 
+      chromadb:
+        condition: service_started
+    networks:
+      - dibot_network    
+    restart: unless-stopped
+	
+  # ========== OLLAMA (LLM Local Service) ==========
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    #ports:
+    #  - "11434:11434"
+    volumes:
+      - ollama_vol:/root/.ollama
+    #environment:
+    #  - OLLAMA_HOST=0.0.0.0:11434
+    # NVIDIA GPU, enable if you want use your nvidia gpu.
+    #deploy:
+    #  resources:
+    #    reservations:
+    #      devices:
+    #        - driver: nvidia
+    #          count: 1
+    #          capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dibot_network
+    restart: unless-stopped    
+  # ========== CHROMADB (Vector Database) ==========
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    #ports:
+    #  - "8000:8000"
+    environment:
+      # Configure autentication
+      #- CHROMA_SERVER_AUTH_PROVIDER=chromadb.auth.token.TokenConfigurationProvider
+      # Configure your chroma api key
+      #- CHROMA_SERVER_AUTH_CREDENTIALS=your token api-key
+      # Autentication type (Header)
+      #- CHROMA_SERVER_AUTH_CREDENTIALS_PROVIDER=chromadb.auth.token.TokenHeaderCredentialsProvider
+      # Header name for security token
+      #- CHROMA_SERVER_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+    volumes:
+      - chromadb_vol:/chroma/chroma
+    networks:
+      - dibot_network
+    restart: unless-stopped    
+volumes:
+  ollama_vol:
+  chromadb_vol:
+  dibot_vol:
+
+networks:
+  dibot_network:
+    driver: bridge
