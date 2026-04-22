@@ -1,2 +1,2 @@
 # dibotagent
-Discord Bot IA Agent.
+Discord Bot AI Agent.
