@@ -58,7 +58,7 @@ https://github.com/arkservertools/dibotagent
 
 ### 🧠 Supported AI Models
 - **Ollama** (recommended for local): phi3.5, mistral, neural-chat, etc.
-- **DeepSeek**: Cloud-based API (recommended for better performance)
+- **DeepSeek**: Cloud-based API (recommended for better performance): `deepseek-chat` (v3), `deepseek-v4-flash`, `deepseek-v4-pro`
 - **Extensible**: Architecture prepared for future integrations (ChatGPT, Claude, etc.)
  
 ## ⚙️ Requirements
@@ -539,10 +539,31 @@ LLM:
 | Parameter | Range | Description |
 |-----------|-------|-------------|
 | **API Key** | string | Your DeepSeek API key |
-| **Model** | string | Model (deepseek-chat or deepseek-coder) |
+| **Model** | enum | `deepseek-chat` (v3), `deepseek-v4-flash`, `deepseek-v4-pro` |
 | **Temperature** | 0.0-2.0 | Creativity control (0=deterministic, 1=normal, >1=creative) |
 | **Max Tokens** | 100-4000 | Maximum response length |
 | **Http Timeout** | seconds | Timeout for responses |
+
+
+These parameters are used when the selected model is `deepseek-v4-flash` or `deepseek-v4-pro`.
+
+| Parameter | Range | Description |
+|-----------|-------|-------------|
+| **thinking.type** | `enabled` / `disabled` | Enables/disables thinking mode. Default: `disabled` |
+| **reasoning_effort** | `high` / `max` | Reasoning effort for the model |
+| **frequency_penalty** | -2.0 to 2.0 | Penalizes token repetition. Default: `0` |
+| **presence_penalty** | -2.0 to 2.0 (nullable) | Encourages new topics. Default: `0` |
+
+**Important behavior:**
+- If `thinking.type = disabled`, `reasoning_effort` is **not sent** in the API request.
+- If `thinking.type = enabled`, `reasoning_effort` is sent (`high` or `max`).
+
+#### DeepSeek model selector in the Configuration page
+
+The DeepSeek section in the Configuration page now uses a combo with 3 options:
+- `deepseek-chat v3` → sends model `deepseek-chat` with the current standard parameters
+- `deepseek-v4-flash` → sends model `deepseek-v4-flash` + v4 additional parameters
+- `deepseek-v4-pro` → sends model `deepseek-v4-pro` + v4 additional parameters
 
 **Recommended temperature by case:**
 - `0.3` - Technical support, precise answers
@@ -743,6 +764,8 @@ docker exec -it ollama nvidia-smi  # For NVIDIA
 
 | Version | Changes |
 |---------|---------|
+| **1.0.3** | Added DeepSeek v4 support |
+| **1.0.2** | Added UnignoreUser feature |
 | **1.0.1** | Removed API controllers |
 | **1.0.0** | Initial release |
 
